@@ -1,0 +1,13 @@
+.DS_Store
+
+*.jl.*.cov
+*.jl.cov
+*.jl.mem
+Manifest.toml
+
+.vscode
+
+benchmarks/benchmarks_output.json
+
+.ipynb_checkpoints
+*.ipynb
