@@ -1,11 +1,11 @@
-name: Runtests
+name: Code Quality
 
 on:
   push:
     branches:
       - 'main'
     paths:
-      - '.github/workflows/Runtests.yml'
+      - '.github/workflows/Code-Quality.yml'
       - 'src/**'
       - 'ext/**'
       - 'test/**'
@@ -14,7 +14,7 @@ on:
     branches:
       - 'main'
     paths:
-      - '.github/workflows/Runtests.yml'
+      - '.github/workflows/Code-Quality.yml'
       - 'src/**'
       - 'ext/**'
       - 'test/**'
@@ -27,7 +27,7 @@ on:
 
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} ( ${{ matrix.group }} )
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     permissions: # needed to allow julia-actions/cache to delete old caches that it has created
       actions: write
@@ -37,14 +37,14 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.10'
-          - '1.11'
+          - 'lts'
+          - '1'
         os:
           - 'ubuntu-latest'
         arch:
           - 'x64'
         group:
-          - 'Core'
+          - 'Code-Quality'
 
     steps:
       - uses: actions/checkout@v5
@@ -57,4 +57,3 @@ jobs:
       - uses: julia-actions/julia-runtest@v1
         env:
           GROUP: ${{ matrix.group }}
-          JULIA_NUM_THREADS: auto
