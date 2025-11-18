@@ -1,0 +1,56 @@
+name: Runtests
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/Runtests.yml'
+      - 'src/**'
+      - 'ext/**'
+      - 'test/**'
+      - 'Project.toml'
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/Runtests.yml'
+      - 'src/**'
+      - 'ext/**'
+      - 'test/**'
+      - 'Project.toml'
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.node.os }} - ${{ matrix.node.arch }}
+    runs-on: ${{ matrix.node.os }}
+    permissions: # needed to allow julia-actions/cache to delete old caches that it has created
+      actions: write
+      contents: read
+    if: ${{ !github.event.pull_request.draft }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.10'
+          - '1.11'
+        node:
+          - os: 'ubuntu-latest'
+            arch: 'x64'
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.node.arch }}
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        env:
+          JULIA_NUM_THREADS: auto
