@@ -1,5 +1,5 @@
 # QuantumRealm.jl
-A package which contains useful tools for Quantum Realm Lab
+A package which contains useful tools for Quantum Realm Lab, NCKU.
 
 This package contains some extra functionalities for [`QuantumToolbox.jl`](https://github.com/qutip/QuantumToolbox.jl) and [`HierarchicalEOM.jl`](https://github.com/qutip/HierarchicalEOM.jl).
 
