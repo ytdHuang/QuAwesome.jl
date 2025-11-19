@@ -5,12 +5,8 @@ import Reexport: @reexport
 @reexport using QuantumToolbox
 @reexport using HierarchicalEOM
 
-# for cuDSSLUFactorization
-import CUDA: has_cuda_gpu
-if has_cuda_gpu()
-    using CUDA, CUDA.CUSPARSE, CUDSS
-    include("cuDSSLUFactorization.jl")
-end
+# cuDSSLUFactorization
+using CUDA, CUDA.CUSPARSE, CUDSS
 
 # standard libraries
 using LinearAlgebra
@@ -20,5 +16,6 @@ using SparseArrays
 using LinearSolve
 
 include("BarycentricAAA.jl")
+include("cuDSSLUFactorization.jl")
 
 end
