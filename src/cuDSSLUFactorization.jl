@@ -53,6 +53,13 @@ function LinearSolve.init_cacheval(
     return (; solver, nnz, dims, colVal, rowPtr, use = 0)
 end
 
+LinearSolve.init_cacheval(alg::cuDSSLUFactorization, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
+    throw(
+        ArgumentError(
+            "cuDSSLUFactorization require the data types to be CUDA.CUSPARSE.CuSparseMatrixCSR and CUDA.CuArray",
+        ),
+    )
+
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorization; kwargs...)
     solver, nnz, dims, colVal, rowPtr, use = cache.cacheval
 
