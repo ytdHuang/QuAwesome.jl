@@ -2,7 +2,7 @@
 
 [![Runtests](https://github.com/ytdHuang/QuantumRealm.jl/actions/workflows/Runtests.yml/badge.svg?branch=main)](https://github.com/ytdHuang/QuantumRealm.jl/actions/workflows/Runtests.yml)
 
-A package which contains useful tools for Quantum Realm Lab, NCKU.
+A package which contains useful tools for Quantum Realm Lab
 
 This package contains some extra functionalities for [`QuantumToolbox.jl`](https://github.com/qutip/QuantumToolbox.jl) and [`HierarchicalEOM.jl`](https://github.com/qutip/HierarchicalEOM.jl).
 

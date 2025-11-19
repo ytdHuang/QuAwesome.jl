@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 BaryRational = "91aaffc3-5777-4842-85b7-5d3d5d6a3494"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 CurveFit = "5a033b19-8c74-5913-a970-47c3779ef25c"
 HierarchicalEOM = "a62dbcb7-80f5-4d31-9a88-8b19fd92b128"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -14,4 +15,5 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
+CUDA = "5.9.4"
 julia = "1.10"
