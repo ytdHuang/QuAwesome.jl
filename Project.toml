@@ -17,8 +17,8 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 BaryRational = "1"
-CUDA = "5.9.4 - 5"
-CUDSS = "0.6.2"
+CUDA = "5.0 - 5.8, 5.9.4 - 5"
+CUDSS = "0.6.1"
 HierarchicalEOM = "2"
 LinearAlgebra = "1"
 LinearSolve = "3.47"
