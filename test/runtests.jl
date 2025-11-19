@@ -9,7 +9,7 @@ const GROUP = get(ENV, "GROUP", "All")
 
 # Core tests
 if (GROUP == "All") || (GROUP == "Core")
-    using QuantumRealm
+    using QuAwesome
 
     println("\nStart running Core tests...\n")
     @run_package_tests verbose=true
@@ -26,7 +26,7 @@ if (GROUP == "All") || (GROUP == "Code-Quality")
     Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
     Pkg.update()
 
-    using QuantumRealm
+    using QuAwesome
     using Aqua, JET
 
     include(joinpath(testdir, "code-quality", "code-quality.jl"))

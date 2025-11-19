@@ -1,4 +1,4 @@
-module QuantumRealm
+module QuAwesome
 
 # main packages
 import Reexport: @reexport
