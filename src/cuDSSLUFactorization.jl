@@ -1,32 +1,37 @@
 import LinearSolve
 export cuDSSLUFactorization
 
-struct cuDSSLUFactorization <:LinearSolve.SciMLLinearSolveAlgorithm
+struct cuDSSLUFactorization <: LinearSolve.SciMLLinearSolveAlgorithm
     refact_lim::Int
     settings::NamedTuple
 end
 
-function cuDSSLUFactorization(refact_lim::Int = typemax(Int); kwargs...)
-    return cuDSSLUFactorization(refact_lim, NamedTuple(kwargs))
-end
+cuDSSLUFactorization(refact_lim::Int = typemax(Int); kwargs...) = cuDSSLUFactorization(refact_lim, NamedTuple(kwargs))
 
 function config_solver(solver, alg)
     for (n, v) in pairs(alg.settings)
         try
             cudss_set(solver, string(n), v)
-        catch er;
+        catch er
             println("Config $n to $v failed.")
         end
     end
-    nothing
+    return nothing
 end
 
 function LinearSolve.init_cacheval(
-        alg::cuDSSLUFactorization, A::CuSparseMatrixCSR, b::CuArray, u::CuArray,
-        Pl, Pr, maxiters::Int, abstol, reltol,
-        verbose::Bool, assump::LinearSolve.OperatorAssumptions
-    )
-
+    alg::cuDSSLUFactorization,
+    A::CuSparseMatrixCSR,
+    b::CuArray,
+    u::CuArray,
+    Pl,
+    Pr,
+    maxiters::Int,
+    abstol,
+    reltol,
+    verbose::Bool,
+    assump::LinearSolve.OperatorAssumptions,
+)
     solver = CudssSolver(A, "G", 'F')
     config_solver(solver, alg)
     cudss("analysis", solver, u, b)
@@ -43,15 +48,10 @@ function LinearSolve.init_cacheval(
     rowPtr = A.rowPtr |> collect
     nnz = A.nnz
 
-    return (; solver, nnz, dims, colVal, rowPtr, use=0)
+    return (; solver, nnz, dims, colVal, rowPtr, use = 0)
 end
 
-function SciMLBase.solve!(
-        cache::LinearSolve.LinearCache,
-        alg::cuDSSLUFactorization;
-        kwargs...
-    )
-
+function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorization; kwargs...)
     solver, nnz, dims, colVal, rowPtr, use = cache.cacheval
 
     if cache.isfresh
@@ -59,7 +59,7 @@ function SciMLBase.solve!(
 
         cudss_update(solver, A)
 
-        _nnz  = A.nnz
+        _nnz = A.nnz
         _dims = A.dims
         _colVal = colVal
         _rowPtr = rowPtr
@@ -88,7 +88,7 @@ function SciMLBase.solve!(
             cudss("refactorization", solver, cache.u, cache.b)
             _use += 1
         end
-        cache.cacheval = (; solver, nnz=_nnz, dims=_dims, colVal=_colVal, rowPtr=_rowPtr, use=_use)
+        cache.cacheval = (; solver, nnz = _nnz, dims = _dims, colVal = _colVal, rowPtr = _rowPtr, use = _use)
     end
 
     ldiv!(cache.u, solver, cache.b)
@@ -96,6 +96,5 @@ function SciMLBase.solve!(
     resid = (cache.A * cache.u - cache.b) |> norm
     resid >= 1e-14 && @warn "residual norm = $resid"
 
-    SciMLBase.build_linear_solution(alg, cache.u, resid, cache)
+    return SciMLBase.build_linear_solution(alg, cache.u, resid, cache)
 end
-
