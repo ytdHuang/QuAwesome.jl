@@ -1,5 +1,7 @@
-import LinearSolve
 export cuDSSLUFactorization
+
+# cuDSSLUFactorization
+using CUDA, CUDA.CUSPARSE, CUDSS
 
 struct cuDSSLUFactorization <: LinearSolve.SciMLLinearSolveAlgorithm
     refact_lim::Int
