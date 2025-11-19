@@ -6,8 +6,8 @@ import Reexport: @reexport
 @reexport using HierarchicalEOM
 
 # standard libraries
-using LinearAlgebra
-using SparseArrays
+@reexport using LinearAlgebra
+@reexport using SparseArrays
 
 # SciML packages
 using LinearSolve

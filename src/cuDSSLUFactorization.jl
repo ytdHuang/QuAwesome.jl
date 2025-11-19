@@ -28,11 +28,11 @@ function LinearSolve.init_cacheval(
     u::CuArray,
     Pl,
     Pr,
-    maxiters::Int,
+    maxiters,
     abstol,
     reltol,
-    verbose::Bool,
-    assump::LinearSolve.OperatorAssumptions,
+    verbose,
+    assump,
 )
     solver = CudssSolver(A, "G", 'F')
     config_solver(solver, alg)
