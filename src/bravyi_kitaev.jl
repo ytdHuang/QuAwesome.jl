@@ -49,6 +49,7 @@ function bkdestroy(N::Int, j::Int)
     Xj = multisite_operator(dims, j => sigmax())
     Yj = multisite_operator(dims, j => sigmay())
 
+    # convention that sigmap is the fdestroy
     return 1/2 * XU * (Xj * ZP + 1im * Yj * ZR)
 end
 
@@ -61,6 +62,6 @@ end
 - `j`: The `j`-th mode destroy operator to return
 - `mode`: `:JW` for Jordan-Wigner and `:BK` for Bravyi-Kitaev
 """
-QuantumToolbox.fdestroy(N::Int, j::Int, mode::Symbol = :JW) = QuantumToolbox.fdestroy(N, j, Val(mode))
+QuantumToolbox.fdestroy(N::Int, j::Int, mode::Symbol) = QuantumToolbox.fdestroy(N, j, Val(mode))
 QuantumToolbox.fdestroy(N::Int, j::Int, ::Val{:JW}) = QuantumToolbox.fdestroy(N, j)
 QuantumToolbox.fdestroy(N::Int, j::Int, ::Val{:BK}) = bkdestroy(N, j)

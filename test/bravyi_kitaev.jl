@@ -1,6 +1,7 @@
 @testitem "bravyi_kitaev" begin
+    @test fdestroy(1, 1, :JW) == fdestroy(1, 1, :BK)
+    
     N = 7
-
     vac = kron(fill(basis(2,0), N)...) |> sparse
     Cs = map(i -> fdestroy(N, i, :BK), 1:N)
     
