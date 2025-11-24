@@ -4,20 +4,17 @@
     N = 7
     vac = kron(fill(basis(2, 0), N)...) |> sparse
     Cs = map(i -> fdestroy(N, i, :BK), 1:N)
-
-    anticomm(A, B) = (A * B) + (B * A)
-
     for i in 1:N
         Ci = Cs[i]
         @test isempty((Ci * vac).data.nzind)
 
-        @test anticomm(Ci, Ci').data == I
-        @test norm(anticomm(Ci, Ci).data) == 0
+        @test commutator(Ci, Ci', anti = true).data == I
+        @test norm(commutator(Ci, Ci, anti = true).data) == 0
 
         for j in (i+1):N
             Cj = Cs[j]
-            @test norm(anticomm(Ci, Cj).data) == 0
-            @test norm(anticomm(Ci, Cj').data) == 0
+            @test norm(commutator(Ci, Cj,  anti = true).data) == 0
+            @test norm(commutator(Ci, Cj', anti = true).data) == 0
         end
     end
 end

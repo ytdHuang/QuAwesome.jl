@@ -38,7 +38,7 @@ function bkdestroy(N::Int, j::Int)
     F = F_set(j-1)
     R = setdiff(P, F)
 
-    dims = Tuple(fill(2, N))
+    dims = ntuple(i -> 2, N)
     Id = qeye(2^N, dims = dims)
 
     XU = isempty(U) ? Id : multisite_operator(dims, map(i -> i+1 => sigmax(), U)...)
@@ -60,6 +60,8 @@ end
 - `N`: Number of fermionic modes
 - `j`: The `j`-th mode destroy operator to return
 - `mode`: `:JW` for Jordan-Wigner and `:BK` for Bravyi-Kitaev
+
+Check out: [Ultrafast Hybrid Fermion-to-Qubit mapping](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.109.115149)
 """
 QuantumToolbox.fdestroy(N::Int, j::Int, mode::Symbol) = QuantumToolbox.fdestroy(N, j, Val(mode))
 QuantumToolbox.fdestroy(N::Int, j::Int, ::Val{:JW}) = QuantumToolbox.fdestroy(N, j)
