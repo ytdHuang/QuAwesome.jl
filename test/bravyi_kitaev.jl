@@ -13,7 +13,7 @@
 
         for j in (i+1):N
             Cj = Cs[j]
-            @test norm(commutator(Ci, Cj,  anti = true).data) == 0
+            @test norm(commutator(Ci, Cj, anti = true).data) == 0
             @test norm(commutator(Ci, Cj', anti = true).data) == 0
         end
     end
