@@ -57,6 +57,13 @@ end
 
 #################################################
 
-QuantumToolbox.fdestroy(N, j, mode::Symbol = :JW) = QuantumToolbox.fdestroy(N, j, Val(mode))
-QuantumToolbox.fdestroy(N, j, ::Val{:JW}) = QuantumToolbox.fdestroy(N, j)
-QuantumToolbox.fdestroy(N, j, ::Val{:BK}) = bkdestroy(N, j)'
+@doc raw"""
+    QuantumToolbox.fdestroy(N::Int, j::Int, mode::Symbol = :JW)
+
+- `N`: Number of fermionic modes
+- `j`: The `j`-th mode destroy operator to return
+- `mode`: `:JW` for Jordan-Wigner and `:BK` for Bravyi-Kitaev
+"""
+QuantumToolbox.fdestroy(N::Int, j::Int, mode::Symbol = :JW) = QuantumToolbox.fdestroy(N, j, Val(mode))
+QuantumToolbox.fdestroy(N::Int, j::Int, ::Val{:JW}) = QuantumToolbox.fdestroy(N, j)
+QuantumToolbox.fdestroy(N::Int, j::Int, ::Val{:BK}) = bkdestroy(N, j)
