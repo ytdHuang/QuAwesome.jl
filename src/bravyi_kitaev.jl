@@ -1,58 +1,55 @@
 import QuantumToolbox: fdestroy
 
-lsb(i::Int) = i & (-i)
-
-function U_set(j::Int, N::Int)
-    inds = Int[]
-    k = j
-    while k <= N
-        push!(inds, k)
-        k += lsb(k)
+function U_set(N::Int, j::Int)
+    p = j
+    out = Int[]
+    while p < N
+        if p != j       # exclude qubit j itself
+            push!(out, p)
+        end
+        p = p | (p + 1)
     end
-    return inds
+    return out
 end
 
 function P_set(j::Int)
-    inds = Int[]
-    k = j
-    while k > 0
-        push!(inds, k)
-        k -= lsb(k)
+    p = j-1         # prefix parity = modes < i
+    out = Int[]
+    while p >= 0
+        push!(out, p)
+        p = (p & (p+1)) - 1    # drop the LSB block
     end
-    return inds
+    return out
 end
 
-function F_qubit(j::Int, N::Int)
-    U = U_set(j, N)
-    isempty(U) ? (return []) : (return [minimum(U)])
-    # return minimum(U)  # or maximum(U), depending on convention; just be consistent
-end
-
-function bk_sets(j::Int, N::Int)
-    U = U_set(j, N)
-    P = P_set(j)           # you can experiment with P_set(j-1) vs P_set(j)
-    F = F_qubit(j, N)         # occupation qubit choice; keep this consistent everywhere
-    return P, U, F
+function F_set(j::Int)
+    out = Int[]
+    k = 0
+    while ((j >> k) & 1) == 1     # as long as bit k of i is 1
+        push!(out, j & ~(1 << k)) # zero out bit k
+        k += 1
+    end
+    return out
 end
 
 function bkdestroy(N::Int, j::Int)
-    P, U, F = bk_sets(j, N)
+    U = U_set(N, j-1)
+    P = P_set(j-1)
+    F = F_set(j-1)
+    R = setdiff(P, F)
 
-    X_sites = setdiff(U, F)
-    Z_sites = setdiff(P, U)
+    dims = Tuple(fill(2, N))
+    Id = qeye(2^N, dims = dims)
 
-    # Build the string S = ( ⊗_{k∈X_sites} X_k ) ( ⊗_{k∈Z_sites} Z_k )
-    S = qeye(2^N, dims = Tuple(fill(2, N)))  # start with identity
-    Sdim = S.dims
-    if !isempty(X_sites)
-        S *= multisite_operator(Sdim, map(i -> i => sigmax(), X_sites)...)
-    end
-    if !isempty(Z_sites)
-        S *= multisite_operator(Sdim, map(i -> i => sigmaz(), Z_sites)...)
-    end
+    XU = isempty(U) ? Id : multisite_operator(dims, map(i -> i+1 => sigmax(), U)...)
+    ZR = isempty(R) ? Id : multisite_operator(dims, map(i -> i+1 => sigmaz(), R)...)
+    ZP = isempty(P) ? Id : multisite_operator(dims, map(i -> i+1 => sigmaz(), P)...)
 
-    # Now attach the local X / Y on the F qubit
-    return multisite_operator(Sdim, F => sigmam()) * S
+
+    Xj = multisite_operator(dims, j => sigmax())
+    Yj = multisite_operator(dims, j => sigmay())
+
+    return 1/2 * XU * (Xj * ZP + 1im * Yj * ZR)
 end
 
 #################################################

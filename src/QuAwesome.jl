@@ -18,5 +18,6 @@ include("env_fitting.jl")
 
 # others
 include("cuDSSLUFactorization.jl")
+include("bravyi_kitaev.jl")
 
 end
