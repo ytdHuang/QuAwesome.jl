@@ -45,7 +45,6 @@ function bkdestroy(N::Int, j::Int)
     ZR = isempty(R) ? Id : multisite_operator(dims, map(i -> i+1 => sigmaz(), R)...)
     ZP = isempty(P) ? Id : multisite_operator(dims, map(i -> i+1 => sigmaz(), P)...)
 
-
     Xj = multisite_operator(dims, j => sigmax())
     Yj = multisite_operator(dims, j => sigmay())
 
