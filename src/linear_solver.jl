@@ -154,8 +154,7 @@ struct PeekResid <: LinearSolve.SciMLLinearSolveAlgorithm
     alg::LinearSolve.SciMLLinearSolveAlgorithm
     tol::Real
 
-    PeekResid(alg::LinearSolve.SciMLLinearSolveAlgorithm; tol = 1e-14) = new(alg, tol)
-    PeekResid(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real) = new(alg, tol)
+    PeekResid(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real = 1e-14) = new(alg, tol)
 end
 
 LinearSolve.init_cacheval(alg::PeekResid, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
