@@ -157,19 +157,16 @@ end
 Add a warning layer for a arbitrary `SciMLLinearSolveAlgorithm`.
 Every time `solve!` gets a bad solution, which `norm(A * u - b) > tol`, a `@warn` is thrown.
 """
-struct WarningSolver  <: LinearSolve.SciMLLinearSolveAlgorithm
+struct WarningSolver <: LinearSolve.SciMLLinearSolveAlgorithm
     alg::LinearSolve.SciMLLinearSolveAlgorithm
     tol::Real
 
-    function WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm; tol = 1e-14)
-        return new(alg, tol)
-    end
-    function WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real)
-        return new(alg, tol)
-    end
+    WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm; tol = 1e-14) = new(alg, tol)
+    WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real) = new(alg, tol)
 end
 
-LinearSolve.init_cacheval(alg::WarningSolver, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) = LinearSolve.init_cacheval(alg.alg, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump)
+LinearSolve.init_cacheval(alg::WarningSolver, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
+    LinearSolve.init_cacheval(alg.alg, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump)
 
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::WarningSolver; kwargs...)
     sol = SciMLBase.solve!(cache, alg.alg; kwargs...)
