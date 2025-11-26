@@ -1,4 +1,4 @@
-export cuDSSLUFactorization, WarningSolver
+export cuDSSLUFactorization, PeekResid
 
 # cuDSSLUFactorization
 using CUDA, CUDA.CUSPARSE, CUDSS
@@ -142,33 +142,26 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
 end
 
 @doc raw"""
-    struct WarningSolver  <: LinearSolve.SciMLLinearSolveAlgorithm
-        alg::LinearSolve.SciMLLinearSolveAlgorithm
-        tol::Real
+    PeekResid(alg::LinearSolve.SciMLLinearSolveAlgorithm; tol = 1e-14)
+    PeekResid(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real)
 
-        function WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm; tol = 1e-14)
-            return new(alg, tol)
-        end
-        function WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real)
-            return new(alg, tol)
-        end
-    end
+resid = norm(A * u - b)
 
 Add a warning layer for a arbitrary `SciMLLinearSolveAlgorithm`.
-Every time `solve!` gets a bad solution, which `norm(A * u - b) > tol`, a `@warn` is thrown.
+Every time `solve!` with `alg` gets a bad solution which `resid > tol`, a `@warn` showing `resid` is thrown.
 """
-struct WarningSolver <: LinearSolve.SciMLLinearSolveAlgorithm
+struct PeekResid <: LinearSolve.SciMLLinearSolveAlgorithm
     alg::LinearSolve.SciMLLinearSolveAlgorithm
     tol::Real
 
-    WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm; tol = 1e-14) = new(alg, tol)
-    WarningSolver(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real) = new(alg, tol)
+    PeekResid(alg::LinearSolve.SciMLLinearSolveAlgorithm; tol = 1e-14) = new(alg, tol)
+    PeekResid(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real) = new(alg, tol)
 end
 
-LinearSolve.init_cacheval(alg::WarningSolver, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
+LinearSolve.init_cacheval(alg::PeekResid, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
     LinearSolve.init_cacheval(alg.alg, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump)
 
-function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::WarningSolver; kwargs...)
+function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::PeekResid; kwargs...)
     sol = SciMLBase.solve!(cache, alg.alg; kwargs...)
     resid = norm(cache.A * sol.u - cache.b)
     (resid > alg.tol) && (@warn "resid = $resid")
