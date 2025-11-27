@@ -1,4 +1,4 @@
-export cuDSSLUFactorization
+export cuDSSLUFactorization, ResidueWarning
 
 # cuDSSLUFactorization
 using CUDA, CUDA.CUSPARSE, CUDSS
@@ -135,8 +135,30 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
 
     ldiv!(cache.u, solver, cache.b)
 
-    resid = (cache.A * cache.u - cache.b) |> norm
-    resid >= 1e-14 && @warn "residual norm = $resid"
+    return SciMLBase.build_linear_solution(alg, cache.u, nothing, cache)
+end
 
-    return SciMLBase.build_linear_solution(alg, cache.u, resid, cache)
+@doc raw"""
+    ResidueWarning(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real = 1e-14)
+
+residue = norm(A * u - b)
+
+Add a warning layer for a arbitrary `SciMLLinearSolveAlgorithm`.
+Every time `solve!` with `alg` gets a bad solution which `residue > tol`, a `@warn` showing `residue` is thrown.
+"""
+struct ResidueWarning <: LinearSolve.SciMLLinearSolveAlgorithm
+    alg::LinearSolve.SciMLLinearSolveAlgorithm
+    tol::Real
+
+    ResidueWarning(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real = 1e-14) = new(alg, tol)
+end
+
+LinearSolve.init_cacheval(alg::ResidueWarning, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
+    LinearSolve.init_cacheval(alg.alg, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump)
+
+function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::ResidueWarning; kwargs...)
+    sol = SciMLBase.solve!(cache, alg.alg; kwargs...)
+    residue = norm(cache.A * sol.u - cache.b)
+    (residue > alg.tol) && (@warn "residue = $residue")
+    return SciMLBase.build_linear_solution(alg, sol.u, residue, cache)
 end

@@ -17,7 +17,7 @@ include("BarycentricAAA.jl")
 include("env_fitting.jl")
 
 # others
-include("cuDSSLUFactorization.jl")
+include("linear_solver.jl")
 include("bravyi_kitaev.jl")
 
 end
