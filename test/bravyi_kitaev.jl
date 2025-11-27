@@ -1,8 +1,11 @@
 @testitem "bravyi_kitaev" begin
+    using QuantumToolbox
+    using LinearAlgebra
+
     @test fdestroy(1, 1, :JW) == fdestroy(1, 1, :BK)
 
     N = 7
-    vac = kron(fill(basis(2, 0), N)...) |> sparse
+    vac = to_sparse(kron(fill(basis(2, 0), N)...))
     Cs = map(i -> fdestroy(N, i, :BK), 1:N)
     for i in 1:N
         Ci = Cs[i]

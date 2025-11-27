@@ -1,13 +1,12 @@
 module QuAwesome
 
 # main packages
-import Reexport: @reexport
-@reexport using QuantumToolbox
-@reexport using HierarchicalEOM
+using QuantumToolbox
+using HierarchicalEOM
 
 # standard libraries
-@reexport using LinearAlgebra
-@reexport using SparseArrays
+using LinearAlgebra
+using SparseArrays
 
 # SciML packages
 using LinearSolve
