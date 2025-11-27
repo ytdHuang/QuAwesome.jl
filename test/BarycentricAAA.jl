@@ -1,4 +1,6 @@
 @testitem "BarycentricAAA" begin
+    using HierarchicalEOM
+
     Γ = 1
     W = 10
     μ = 1
