@@ -199,25 +199,29 @@ auto_Fermion_Lorentz_Pade(
 ) where {T<:Real,U<:Real,V<:Real,S<:Real} = auto_Fermion_Lorentz_Pade(op, λ, μ, W, kT, Val(info); kwargs...)
 
 function _auto_Fermion_Lorentz_Matsubara(
-        op::QuantumObject, λ::T, μ::U, W::V, kT::S;
-        Nmin::Int=1,
-        Nmax::Int=100,
-        Nref::Int=500,
-        tlist::AbstractVector{<:Real}=0:0.01:20, 
-        target_nrmse::Union{<:Real}=1e-5,
-    ) where {T<:Real, U<:Real, V<:Real, S<:Real}
-    ηp, γp = _fermion_lorentz_matsubara_param( 1, λ, μ, W, kT, Nref)
+    op::QuantumObject,
+    λ::T,
+    μ::U,
+    W::V,
+    kT::S;
+    Nmin::Int = 1,
+    Nmax::Int = 100,
+    Nref::Int = 500,
+    tlist::AbstractVector{<:Real} = 0:0.01:20,
+    target_nrmse::Union{<:Real} = 1e-5,
+) where {T<:Real,U<:Real,V<:Real,S<:Real}
+    ηp, γp = _fermion_lorentz_matsubara_param(1, λ, μ, W, kT, Nref)
     ηm, γm = _fermion_lorentz_matsubara_param(-1, λ, μ, W, kT, Nref)
     cpref = expsum(ηp, γp, tlist)
     cmref = expsum(ηm, γm, tlist)
-    
+
     nrmse = Inf
     N = Nmin - 1
 
     ηp_, γp_ = nothing, nothing
     while (N <= Nmax) && (nrmse > target_nrmse)
         N += 1
-        ηp_, γp_ = _fermion_lorentz_matsubara_param( 1, λ, μ, W, kT, N)
+        ηp_, γp_ = _fermion_lorentz_matsubara_param(1, λ, μ, W, kT, N)
         cp = expsum(ηp_, γp_, tlist)
         nrmse = max(_nrmse(real(cp), real(cpref)), _nrmse(imag(cp), imag(cpref)))
     end
@@ -235,17 +239,31 @@ function _auto_Fermion_Lorentz_Matsubara(
     end
 
     if !fresh
-        ηp_, γp_ = _fermion_lorentz_matsubara_param( 1, λ, μ, W, kT, N)
+        ηp_, γp_ = _fermion_lorentz_matsubara_param(1, λ, μ, W, kT, N)
     end
-    
+
     return FermionBath(op, ηp_, γp_, ηm_, γm_), (; N, nrmse)
 end
 
-auto_Fermion_Lorentz_Matsubara(op::QuantumObject, λ::T, μ::U, W::V, kT::S, info::Val{true}; kwargs...) where {T<:Real, U<:Real, V<:Real, S<:Real} = 
-    _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)
+auto_Fermion_Lorentz_Matsubara(
+    op::QuantumObject,
+    λ::T,
+    μ::U,
+    W::V,
+    kT::S,
+    info::Val{true};
+    kwargs...,
+) where {T<:Real,U<:Real,V<:Real,S<:Real} = _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)
 
-auto_Fermion_Lorentz_Matsubara(op::QuantumObject, λ::T, μ::U, W::V, kT::S, info::Val{false}; kwargs...) where {T<:Real, U<:Real, V<:Real, S<:Real} = 
-    _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)[1]
+auto_Fermion_Lorentz_Matsubara(
+    op::QuantumObject,
+    λ::T,
+    μ::U,
+    W::V,
+    kT::S,
+    info::Val{false};
+    kwargs...,
+) where {T<:Real,U<:Real,V<:Real,S<:Real} = _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)[1]
 
 @doc raw"""
     auto_Fermion_Lorentz_Matsubara(
@@ -264,5 +282,12 @@ if `info = true`, return `(; N, nrmse)` after the `FermionBath`
 
 See the doc string for `Fermion_Lorentz_Matsubara` for more detail about other arguments.
 """
-auto_Fermion_Lorentz_Matsubara(op::QuantumObject, λ::T, μ::U, W::V, kT::S, info::Bool=false; kwargs...) where {T<:Real, U<:Real, V<:Real, S<:Real} = 
-    auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT, Val(info); kwargs...)
+auto_Fermion_Lorentz_Matsubara(
+    op::QuantumObject,
+    λ::T,
+    μ::U,
+    W::V,
+    kT::S,
+    info::Bool = false;
+    kwargs...,
+) where {T<:Real,U<:Real,V<:Real,S<:Real} = auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT, Val(info); kwargs...)
