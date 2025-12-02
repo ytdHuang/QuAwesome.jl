@@ -1,0 +1,20 @@
+@testitem "auto_Fermion" begin
+    using HierarchicalEOM
+
+    Γ = 1.0
+    W = 0.1
+    μ = 1.0ß
+    T = 1
+    tlist = 0:0.01:10
+
+    pade_auto, info = auto_Fermion_Lorentz_Pade(sigmax(), Γ, μ, W, T, true; target_nrmse = 1e-4, Nmax = 50)
+    C1p, C1m = correlation_function(pade_auto, tlist)
+
+    pade_std = Fermion_Lorentz_Pade(sigmax(), Γ, μ, W, T, info.N)
+    C2p, C2m = correlation_function(pade_std, tlist)
+
+    @test all(isapprox.(real.(C1p), real.(C2p); atol = 1e-3))
+    @test all(isapprox.(imag.(C1p), imag.(C2p); atol = 1e-3))
+    @test all(isapprox.(real.(C1m), real.(C2m); atol = 1e-3))
+    @test all(isapprox.(imag.(C1m), imag.(C2m); atol = 1e-3))
+end
