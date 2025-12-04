@@ -1,4 +1,4 @@
-@testitem "auto_Fermion_Pade" begin
+@testitem "auto_Fermion_Lorentz_Pade" begin
     using HierarchicalEOM
 
     Γ = 1.0
@@ -19,7 +19,7 @@
     @test all(isapprox.(imag.(C1m), imag.(C2m); atol = 1e-3))
 end
 
-@testitem "auto_Fermion_Matsubara" begin
+@testitem "auto_Fermion_Lorentz_Matsubara" begin
     using HierarchicalEOM
 
     Γ = 1.0
@@ -28,7 +28,7 @@ end
     T = 1
     tlist = 0:0.01:10
 
-    mats_auto, info = auto_Fermion_Matsubara(sigmax(), Γ, μ, W, T, true; target_nrmse = 1e-4, Nmax = 50)
+    mats_auto, info = auto_Fermion_Lorentz_Matsubara(sigmax(), Γ, μ, W, T, true; target_nrmse = 1e-4, Nmax = 50)
     C1p, C1m = correlation_function(mats_auto, tlist)
 
     mats_std = Fermion_Lorentz_Matsubara(sigmax(), Γ, μ, W, T, info.N)
