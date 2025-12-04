@@ -4,6 +4,7 @@ export auto_Fermion_Lorentz_Matsubara, auto_Fermion_Lorentz_Pade
 import QuantumToolbox: _float_type
 import HierarchicalEOM: _check_bosonic_coupling_operator
 import CurveFit: CurveFitProblem, ExpSumFitAlgorithm
+import HierarchicalEOM: _fermion_lorentz_pade_param, _fermion_lorentz_matsubara_param, FermionBath
 
 @doc raw"""
     _nrmse(predict::AbstractVector{<:Real}, actual::AbstractVector{<:Real})

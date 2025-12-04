@@ -159,6 +159,6 @@ LinearSolve.init_cacheval(alg::ResidueWarning, A, b, u, Pl, Pr, maxiters, abstol
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::ResidueWarning; kwargs...)
     sol = SciMLBase.solve!(cache, alg.alg; kwargs...)
     residue = norm(cache.A * sol.u - cache.b)
-    (residue > alg.tol) && (@warn "residue = $residue")
+    (residue > alg.tol) && (@warn "residue = $residue"; flush(stderr))
     return SciMLBase.build_linear_solution(alg, sol.u, residue, cache)
 end
