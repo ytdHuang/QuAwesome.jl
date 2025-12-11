@@ -37,11 +37,12 @@ The available keyword arguments are:
 - `deterministic_mode`: Enable deterministic mode -- `0` (default = disabled) or `1` (enabled).
 """
 struct cuDSSLUFactorization <: LinearSolve.SciMLLinearSolveAlgorithm
+    ϵ::Real
     refact_lim::Int
     settings::NamedTuple
 end
 
-cuDSSLUFactorization(refact_lim::Int = typemax(Int); kwargs...) = cuDSSLUFactorization(refact_lim, NamedTuple(kwargs))
+cuDSSLUFactorization(ϵ::Real = 1e-12; refact_lim::Int = typemax(Int), kwargs...) = cuDSSLUFactorization(ϵ, refact_lim, NamedTuple(kwargs))
 
 function config_solver(solver, alg)
     for (n, v) in pairs(alg.settings)
@@ -67,7 +68,8 @@ function LinearSolve.init_cacheval(
     verbose,
     assump,
 )
-    solver = CudssSolver(A, "G", 'F')
+    A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
+    solver = CudssSolver(A_, "G", 'F')
     config_solver(solver, alg)
     cudss("analysis", solver, u, b)
 
@@ -78,10 +80,10 @@ function LinearSolve.init_cacheval(
 
     cudss("factorization", solver, u, b)
 
-    dims = A.dims
-    colVal = A.colVal |> collect
-    rowPtr = A.rowPtr |> collect
-    nnz = A.nnz
+    dims = A_.dims
+    colVal = A_.colVal |> collect
+    rowPtr = A_.rowPtr |> collect
+    nnz = A_.nnz
 
     return (; solver, nnz, dims, colVal, rowPtr, use = 0)
 end
@@ -98,11 +100,12 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
 
     if cache.isfresh
         A = cache.A
+        A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
 
-        cudss_update(solver, A)
+        cudss_update(solver, A_)
 
-        _nnz = A.nnz
-        _dims = A.dims
+        _nnz = A_.nnz
+        _dims = A_.dims
         _colVal = colVal
         _rowPtr = rowPtr
         _use = copy(use)
@@ -112,11 +115,11 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
             _use = 0
         elseif nnz != _nnz
             new_fact = true
-        elseif dims != A.dims
+        elseif dims != A_.dims
             new_fact = true
         else
-            _colVal = A.colVal |> collect
-            _rowPtr = A.rowPtr |> collect
+            _colVal = A_.colVal |> collect
+            _rowPtr = A_.rowPtr |> collect
             if _colVal == colVal && rowPtr == _rowPtr
                 new_fact = false
             else
@@ -133,7 +136,11 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
         cache.cacheval = (; solver, nnz = _nnz, dims = _dims, colVal = _colVal, rowPtr = _rowPtr, use = _use)
     end
 
-    ldiv!(cache.u, solver, cache.b)
+    u_ = similar(cache.b)
+    v_ = similar(cache.b)
+    ldiv!(u_, solver, cache.b)
+    ldiv!(v_, solver, u_)
+    cache.u = u_ - alg.ϵ * v_
 
     return SciMLBase.build_linear_solution(alg, cache.u, nothing, cache)
 end
