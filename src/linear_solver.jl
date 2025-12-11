@@ -42,7 +42,8 @@ struct cuDSSLUFactorization <: LinearSolve.SciMLLinearSolveAlgorithm
     settings::NamedTuple
 end
 
-cuDSSLUFactorization(ϵ::Real = 1e-12; refact_lim::Int = typemax(Int), kwargs...) = cuDSSLUFactorization(ϵ, refact_lim, NamedTuple(kwargs))
+cuDSSLUFactorization(ϵ::Real = 1e-12; refact_lim::Int = typemax(Int), kwargs...) =
+    cuDSSLUFactorization(ϵ, refact_lim, NamedTuple(kwargs))
 
 function config_solver(solver, alg)
     for (n, v) in pairs(alg.settings)
