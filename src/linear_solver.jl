@@ -29,7 +29,8 @@ factorizations for sequences of structurally identical sparse systems.
     `x ← x + ϵ⋅A⁻² b`.
     This one-step refine is only beneficial when the perturbed system is solved
     sufficiently accurate, use this after you tuned the solver by the `kwargs` in
-    the next paragragh.
+    the next paragraph.
+    
 - `reuse_symbolic`:
     If `true`, symbolic factorization will be reused whenever the sparsity pattern
     (nonzero count and dimensions) is unchanged.
