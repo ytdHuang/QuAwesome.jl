@@ -4,53 +4,138 @@ export cuDSSLUFactorization, ResidueWarning
 using CUDA, CUDA.CUSPARSE, CUDSS
 
 @doc raw"""
-    cuDSSLUFactorization(refact_lim::Int = typemax(Int); kwargs...)
+    cuDSSLUFactorization(;
+        ϵ::Real = 0,
+        refine::Bool = false,
+        reuse_symbolic::Bool = true,
+        refact_lim::Int = typemax(Int),
+        kwargs...
+    )
+A GPU-accelerated sparse direct linear solver based on **NVIDIA cuDSS**, wrapped
+as a `SciMLLinearSolveAlgorithm`. This solver supports optional diagonal
+perturbation, iterative refinement, and controlled reuse of symbolic
+factorizations for sequences of structurally identical sparse systems.
 
-`refact_lim`: reuse symbolic factorization for how many times.
+## Parameters
 
-The available keyword arguments are:
-- `reordering_alg`: Algorithm for the reordering phase (`"default"`, `"algo1"`, `"algo2"`, `"algo3"`, `"algo4"`, or `"algo5"`);
-- `factorization_alg`: Algorithm for the factorization phase (`"default"`, `"algo1"`, `"algo2"`, `"algo3"`, `"algo4"`, or `"algo5"`);
-- `solve_alg`: Algorithm for the solving phase (`"default"`, `"algo1"`, `"algo2"`, `"algo3"`, `"algo4"`, or `"algo5"`);
-- `use_matching`: A flag to enable (`1`) or disable (`0`) the matching;
-- `matching_alg`: Algorithm for the matching;
-- `solve_mode`: Potential modificator on the system matrix (transpose or adjoint);
-- `ir_n_steps`: Number of steps during the iterative refinement;
-- `ir_tol`: Iterative refinement tolerance;
-- `pivot_type`: Type of pivoting (`'C'`, `'R'` or `'N'`);
-- `pivot_threshold`: Pivoting threshold which is used to determine if digonal element is subject to pivoting;
-- `pivot_epsilon`: Pivoting epsilon, absolute value to replace singular diagonal elements;
-- `max_lu_nnz`: Upper limit on the number of nonzero entries in LU factors for non-symmetric matrices;
-- `hybrid_memory_mode`: Hybrid memory mode -- `0` (default = device-only) or `1` (hybrid = host/device);
-- `hybrid_device_memory_limit`: User-defined device memory limit (number of bytes) for the hybrid memory mode;
-- `use_cuda_register_memory`: A flag to enable (`1`) or disable (`0`) usage of `cudaHostRegister()` by the hybrid memory mode;
-- `host_nthreads`: Number of threads to be used by cuDSS in multi-threaded mode;
-- `hybrid_execute_mode`: Hybrid execute mode -- `0` (default = device-only) or `1` (hybrid = host/device);
-- `pivot_epsilon_alg`: Algorithm for the pivot epsilon calculation;
-- `nd_nlevels`: Minimum number of levels for the nested dissection reordering;
-- `ubatch_size`: The number of matrices in a uniform batch of systems to be processed by cuDSS;
-- `ubatch_index`: Use `-1` (default) to process all matrices in the uniform batch, or a 0-based index to process a single matrix during the factorization or solve phase;
-- `use_superpanels`: Use superpanel optimization -- `1` (default = enabled) or `0` (disabled);
-- `device_count`: Device count in case of multiple device;
-- `device_indices`: A list of device indices as an integer array;
-- `schur_mode`: Schur complement mode -- `0` (default = disabled) or `1` (enabled);
-- `deterministic_mode`: Enable deterministic mode -- `0` (default = disabled) or `1` (enabled).
+- `ϵ`:
+    Diagonal perturbation strength.
+    The system `A x = b` is replaced by `(A + ϵI)x = b`.
+    Used to stabilize nearly singular or poorly pivoted systems.
+    Set `ϵ = 0` to disable perturbation.
+
+- `refine`:
+    Whether to perform an additional refinement step
+    `x ← x + ϵ⋅A⁻² b`.
+    This one-step refine is only beneficial when the perturbed system is solved
+    sufficiently accurate, use this after you tuned the solver by the `kwargs` in
+    the next paragragh.
+- `reuse_symbolic`:
+    If `true`, symbolic factorization will be reused whenever the sparsity pattern
+    (nonzero count and dimensions) is unchanged.
+    If `false`, every call triggers full `analysis + factorization`.
+
+- `refact_lim`:
+    Maximum number of **numeric refactorizations** allowed before a full symbolic
+    analysis is forced.
+    Similar to behaviors found in UMFPACK and MKL Pardiso wrappers.
+
+- `kwargs`:
+    Any additional keyword arguments are passed directly to `cuDSS` via
+    `cudss_set(solver, key, value)` during initialization.
+    These control reordering, pivoting, hybrid memory mode, etc.
+
+## Supported cuDSS keyword options
+
+The following options correspond to cuDSS configuration parameters:
+
+- `reordering_alg`: Reordering algorithm for symbolic analysis
+    (`"default"`, `"algo1"`, `"algo2"`, `"algo3"`, `"algo4"`, `"algo5"`).
+- `factorization_alg`: Algorithm for numeric factorization
+    (same set of symbolic strings as above).
+- `solve_alg`: Algorithm for the triangular solve phase
+    (`"default"`, `"algo1"`, `"algo2"`, `"algo3"`, `"algo4"`, `"algo5"`).
+- `use_matching`: Enable (`1`) or disable (`0`) diagonal matching.
+- `matching_alg`: Matching algorithm used when `use_matching = 1`.
+- `solve_mode`: Matrix modification mode (`"N"` = normal, `"T"` = transpose, `"C"` = adjoint).
+- `ir_n_steps`: Number of steps in cuDSS internal iterative refinement.
+- `ir_tol`: Tolerance for internal iterative refinement.
+- `pivot_type`: Pivoting mode (`'C'` = column, `'R'` = row, `'N'` = none).
+- `pivot_threshold`: Threshold used to decide whether to pivot on a given diagonal entry.
+- `pivot_epsilon`: Value used to replace singular diagonal entries if pivoting is disabled.
+- `max_lu_nnz`: Upper bound on LU nonzero count for unsymmetric matrices.
+- `hybrid_memory_mode`:
+    `0` = device-only (default),
+    `1` = hybrid host/device memory.
+- `hybrid_device_memory_limit`: Device memory limit in hybrid mode (bytes).
+- `use_cuda_register_memory`: Enable (`1`) or disable (`0`) `cudaHostRegister()` in hybrid mode.
+- `host_nthreads`: Number of CPU threads used by cuDSS in hybrid execution.
+- `hybrid_execute_mode`:
+    `0` = device-only (default),
+    `1` = hybrid host/device compute.
+- `pivot_epsilon_alg`: Algorithm for computing the pivot epsilon.
+- `nd_nlevels`: Number of nested dissection levels for reordering.
+- `ubatch_size`: Batch size for uniform batched factorization/solves.
+- `ubatch_index`:
+    `-1` (default) = process all matrices in the batch,
+    otherwise process only a single 0-based matrix index.
+- `use_superpanels`: Enable (`1`) or disable (`0`) superpanel optimization.
+- `device_count`: Number of CUDA devices to be used.
+- `device_indices`: Array of device indices.
+- `schur_mode`:
+    `0` = Schur complement disabled (default),
+    `1` = Schur complement enabled.
+- `deterministic_mode`:
+    `0` = nondeterministic (faster),
+    `1` = deterministic execution.
+
+## Usage Example
+
+```julia
+using LinearSolve
+using CUDA
+using PerturbedCUDSSSolver
+
+A = CuSparseMatrixCSR(sprand(10_000, 10_000, 0.001))
+b = CUDA.rand(10_000)
+
+alg = cuDSSLUFactorization(1e-12, true; ir_n_steps = 7)
+
+prob = LinearProblem(A, b)
+sol  = solve(prob, alg)
+```
 """
 struct cuDSSLUFactorization <: LinearSolve.SciMLLinearSolveAlgorithm
-    ϵ::Real
-    refact_lim::Int
+    ϵ::Real      # diagonal perturbation A -> A + ϵI
+    refine::Bool    # whether to perform the extra refinement step
+    reuse_symbolic::Bool
+    refact_lim::Int  # max number of "refactorization" calls before forcing full analysis+factorization
     settings::NamedTuple
 end
 
-cuDSSLUFactorization(ϵ::Real = 1e-12; refact_lim::Int = typemax(Int), kwargs...) =
-    cuDSSLUFactorization(ϵ, refact_lim, NamedTuple(kwargs))
+cuDSSLUFactorization(
+    ϵ::Real = 0,
+    refine::Bool = false;
+    reuse_symbolic::Bool = true,
+    refact_lim::Int = typemax(Int),
+    kwargs...,
+) = cuDSSLUFactorization(ϵ, refine, reuse_symbolic, refact_lim, NamedTuple(kwargs))
 
-function config_solver(solver, alg)
+struct cuDSSLUCache{S,TA}
+    solver::S
+    nnz::Union{Int64,Int32}
+    dims::Tuple{Int,Int}
+    use::Int
+    work::Union{Nothing,TA} # workspace for refinement, if refine=true
+end
+
+function config_solver(solver, alg::cuDSSLUFactorization)
     for (n, v) in pairs(alg.settings)
         try
             cudss_set(solver, string(n), v)
         catch er
-            println("Config $n to $v failed.")
+            # you might want @warn instead of println in real code
+            println("Config $n = $v failed: ", er)
         end
     end
     return nothing
@@ -69,9 +154,11 @@ function LinearSolve.init_cacheval(
     verbose,
     assump,
 )
-    A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
+    A_ = alg.ϵ == 0 ? A : A + alg.ϵ * Eye{eltype(A)}(size(A, 1))
+
     solver = CudssSolver(A_, "G", 'F')
     config_solver(solver, alg)
+
     cudss("analysis", solver, u, b)
 
     if cudss_get(solver, "hybrid_memory_mode") == 1
@@ -79,69 +166,70 @@ function LinearSolve.init_cacheval(
         cudss_set(solver, "hybrid_device_memory_limit", lim)
     end
 
-    cudss("factorization", solver, u, b)
-
     dims = A_.dims
-    colVal = A_.colVal |> collect
-    rowPtr = A_.rowPtr |> collect
     nnz = A_.nnz
+    work = alg.refine ? similar(b) : nothing
 
-    return (; solver, nnz, dims, colVal, rowPtr, use = 0)
-end
-
-LinearSolve.init_cacheval(alg::cuDSSLUFactorization, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
-    throw(
-        ArgumentError(
-            "cuDSSLUFactorization require the data types to be CUDA.CUSPARSE.CuSparseMatrixCSR and CUDA.CuArray",
-        ),
+    state = cuDSSLUCache{typeof(solver),typeof(work)}(
+        solver,
+        nnz,
+        dims,
+        0,     # use counter
+        work,
     )
 
+    return state
+end
+
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorization; kwargs...)
-    solver, nnz, dims, colVal, rowPtr, use = cache.cacheval
+    state = cache.cacheval::cuDSSLUCache
+    solver = state.solver
+    nnz = state.nnz
+    dims = state.dims
+    use = state.use
+    work = state.work
 
     if cache.isfresh
-        A = cache.A
-        A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
+        A = cache.A::CuSparseMatrixCSR
 
-        cudss_update(solver, A_)
+        # Rebuild (possibly) shifted matrix with current A
+        A_ = alg.ϵ == 0 ? A : A + alg.ϵ * Eye{eltype(A)}(size(A, 1))
 
-        _nnz = A_.nnz
-        _dims = A_.dims
-        _colVal = colVal
-        _rowPtr = rowPtr
-        _use = copy(use)
+        # Update matrix in the solver
+        use != 0 && cudss_update(solver, A_)
 
-        if use == alg.refact_lim
-            new_fact = true
-            _use = 0
-        elseif nnz != _nnz
-            new_fact = true
-        elseif dims != A_.dims
-            new_fact = true
-        else
-            _colVal = A_.colVal |> collect
-            _rowPtr = A_.rowPtr |> collect
-            if _colVal == colVal && rowPtr == _rowPtr
-                new_fact = false
-            else
-                new_fact = true
-            end
-        end
+        new_nnz = A_.nnz
+        new_dims = A_.dims
+        new_use = use
 
-        if new_fact
+        # Decide whether to reuse symbolic factorization or redo analysis
+        if use == 0
             cudss("factorization", solver, cache.u, cache.b)
-        else
+            new_use += 1
+        elseif alg.reuse_symbolic && (new_nnz == nnz) && (new_dims == dims) && (use < alg.refact_lim)
+            # Reuse pattern: numeric refactorization only
             cudss("refactorization", solver, cache.u, cache.b)
-            _use += 1
+            new_use += 1
+        else
+            # New or changed pattern (or reuse disabled / refact_lim reached): full analysis + factorization
+            cudss("analysis", solver, cache.u, cache.b)
+            cudss("factorization", solver, cache.u, cache.b)
+            new_use = 1
+            nnz = new_nnz
+            dims = new_dims
         end
-        cache.cacheval = (; solver, nnz = _nnz, dims = _dims, colVal = _colVal, rowPtr = _rowPtr, use = _use)
+
+        # Update cache state
+        cache.cacheval = cuDSSLUCache{typeof(solver),typeof(work)}(solver, nnz, dims, new_use, work)
     end
 
-    u_ = similar(cache.b)
-    v_ = similar(cache.b)
-    ldiv!(u_, solver, cache.b)
-    ldiv!(v_, solver, u_)
-    cache.u = u_ - alg.ϵ * v_
+    if alg.refine && (alg.ϵ != 0)
+        ldiv!(cache.u, solver, cache.b)
+        ldiv!(work, solver, cache.u)
+        axpy!(alg.ϵ, work, cache.u)
+    else
+        ldiv!(cache.u, solver, cache.b)
+    end
 
     return SciMLBase.build_linear_solution(alg, cache.u, nothing, cache)
 end
@@ -166,7 +254,7 @@ LinearSolve.init_cacheval(alg::ResidueWarning, A, b, u, Pl, Pr, maxiters, abstol
 
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::ResidueWarning; kwargs...)
     sol = SciMLBase.solve!(cache, alg.alg; kwargs...)
-    residue = norm(cache.A * sol.u - cache.b)
+    residue = isnothing(sol.resid) ? norm(cache.A * sol.u - cache.b) : sol.resid
     (residue > alg.tol) && (@warn "residue = $residue"; flush(stderr))
     return SciMLBase.build_linear_solution(alg, sol.u, residue, cache)
 end
