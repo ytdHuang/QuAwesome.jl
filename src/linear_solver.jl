@@ -4,12 +4,12 @@ export cuDSSLUFactorization, ResidueWarning
 using CUDA, CUDA.CUSPARSE, CUDSS
 
 @doc raw"""
-    cuDSSLUFactorization(;
+    cuDSSLUFactorization(
         ϵ::Real = 0,
-        refine::Bool = false,
+        refine::Bool = false;
         reuse_symbolic::Bool = true,
         refact_lim::Int = typemax(Int),
-        kwargs...
+        kwargs...,
     )
 A GPU-accelerated sparse direct linear solver based on **NVIDIA cuDSS**, wrapped
 as a `SciMLLinearSolveAlgorithm`. This solver supports optional diagonal
@@ -188,9 +188,6 @@ LinearSolve.init_cacheval(alg::cuDSSLUFactorization, A, b, u, Pl, Pr, maxiters, 
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorization; kwargs...)
     state = cache.cacheval::cuDSSLUCache
     solver = state.solver
-    nnz = state.nnz
-    dims = state.dims
-    use = state.use
     work = state.work
 
     if cache.isfresh
@@ -200,31 +197,28 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
         A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
 
         # Update matrix in the solver
-        use != 0 && cudss_update(solver, A_)
+        state.use != 0 && cudss_update(solver, A_)
 
         new_nnz = A_.nnz
         new_dims = A_.dims
-        new_use = use
 
         # Decide whether to reuse symbolic factorization or redo analysis
-        if use == 0
+        if state.use == 0
             cudss("factorization", solver, cache.u, cache.b)
-            new_use += 1
-        elseif alg.reuse_symbolic && (new_nnz == nnz) && (new_dims == dims) && (use < alg.refact_lim)
+            new_use = state.use + 1
+        elseif alg.reuse_symbolic && (new_nnz == state.nnz) && (new_dims == state.dims) && (state.use < alg.refact_lim)
             # Reuse pattern: numeric refactorization only
             cudss("refactorization", solver, cache.u, cache.b)
-            new_use += 1
+            new_use = state.use + 1
         else
             # New or changed pattern (or reuse disabled / refact_lim reached): full analysis + factorization
             cudss("analysis", solver, cache.u, cache.b)
             cudss("factorization", solver, cache.u, cache.b)
             new_use = 1
-            nnz = new_nnz
-            dims = new_dims
         end
 
         # Update cache state
-        cache.cacheval = cuDSSLUCache{typeof(solver),typeof(work)}(solver, nnz, dims, new_use, work)
+        cache.cacheval = cuDSSLUCache{typeof(solver),typeof(work)}(solver, new_nnz, new_dims, new_use, work)
     end
 
     if alg.refine && (alg.ϵ != 0)
