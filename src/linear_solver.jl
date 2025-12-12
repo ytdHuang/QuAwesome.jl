@@ -197,7 +197,7 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
         A = cache.A::CuSparseMatrixCSR
 
         # Rebuild (possibly) shifted matrix with current A
-        A_ = alg.ϵ == 0 ? A : A + alg.ϵ * Eye{eltype(A)}(size(A, 1))
+        A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
 
         # Update matrix in the solver
         use != 0 && cudss_update(solver, A_)
