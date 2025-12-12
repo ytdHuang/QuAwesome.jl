@@ -30,7 +30,7 @@ factorizations for sequences of structurally identical sparse systems.
     This one-step refine is only beneficial when the perturbed system is solved
     sufficiently accurate, use this after you tuned the solver by the `kwargs` in
     the next paragraph.
-    
+
 - `reuse_symbolic`:
     If `true`, symbolic factorization will be reused whenever the sparsity pattern
     (nonzero count and dimensions) is unchanged.
@@ -181,6 +181,9 @@ function LinearSolve.init_cacheval(
 
     return state
 end
+
+LinearSolve.init_cacheval(alg::cuDSSLUFactorization, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
+    throw(ArgumentError("cuDSSLUFactorization only supports CuSparseMatrixCSR and CuArray types."))
 
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorization; kwargs...)
     state = cache.cacheval::cuDSSLUCache
