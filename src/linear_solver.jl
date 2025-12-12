@@ -155,7 +155,7 @@ function LinearSolve.init_cacheval(
     verbose,
     assump,
 )
-    A_ = alg.ϵ == 0 ? A : A + alg.ϵ * Eye{eltype(A)}(size(A, 1))
+    A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
 
     solver = CudssSolver(A_, "G", 'F')
     config_solver(solver, alg)
