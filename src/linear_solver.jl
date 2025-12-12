@@ -95,7 +95,7 @@ The following options correspond to cuDSS configuration parameters:
 ```julia
 using LinearSolve
 using CUDA
-using PerturbedCUDSSSolver
+using QuAwesome
 
 A = CuSparseMatrixCSR(sprand(10_000, 10_000, 0.001))
 b = CUDA.rand(10_000)
