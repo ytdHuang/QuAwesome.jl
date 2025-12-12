@@ -7,6 +7,7 @@ using HierarchicalEOM
 # standard libraries
 using LinearAlgebra
 using SparseArrays
+import FillArrays
 
 # SciML packages
 using LinearSolve
