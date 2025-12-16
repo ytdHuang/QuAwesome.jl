@@ -114,6 +114,8 @@ struct cuDSSLUFactorization <: LinearSolve.SciMLLinearSolveAlgorithm
     settings::NamedTuple
 end
 
+LinearSolve.needs_concrete_A(alg::cuDSSLUFactorization) = true
+
 cuDSSLUFactorization(
     ϵ::Real = 0,
     refine::Bool = false;
