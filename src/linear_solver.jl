@@ -208,7 +208,7 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
         if state.use == 0
             cudss("factorization", solver, cache.u, cache.b)
             new_use = state.use + 1
-        elseif alg.reuse_symbolic && (new_nnz == state.nnz) && (new_dims == state.dims) && (state.use < alg.refact_lim)
+        elseif alg.reuse_symbolic && (state.use < alg.refact_lim) && (new_nnz == state.nnz) && (new_dims == state.dims)
             # Reuse pattern: numeric refactorization only
             cudss("refactorization", solver, cache.u, cache.b)
             new_use = state.use + 1
@@ -248,6 +248,7 @@ struct ResidueWarning <: LinearSolve.SciMLLinearSolveAlgorithm
 
     ResidueWarning(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real = 1e-14) = new(alg, tol)
 end
+LinearSolve.needs_concrete_A(alg::ResidueWarning) = false
 
 LinearSolve.init_cacheval(alg::ResidueWarning, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
     LinearSolve.init_cacheval(alg.alg, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump)
