@@ -114,7 +114,7 @@ struct cuDSSLUFactorization <: LinearSolve.SciMLLinearSolveAlgorithm
     settings::NamedTuple
 end
 
-LinearSolve.needs_concrete_A(alg::cuDSSLUFactorization) = true
+LinearSolve.needs_concrete_A(::cuDSSLUFactorization) = true
 
 cuDSSLUFactorization(
     ϵ::Real = 0,
@@ -184,7 +184,7 @@ function LinearSolve.init_cacheval(
     return state
 end
 
-LinearSolve.init_cacheval(alg::cuDSSLUFactorization, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
+LinearSolve.init_cacheval(::cuDSSLUFactorization, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
     throw(ArgumentError("cuDSSLUFactorization only supports CuSparseMatrixCSR and CuArray types."))
 
 function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorization; kwargs...)
@@ -248,7 +248,7 @@ struct ResidueWarning <: LinearSolve.SciMLLinearSolveAlgorithm
 
     ResidueWarning(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real = 1e-14) = new(alg, tol)
 end
-LinearSolve.needs_concrete_A(alg::ResidueWarning) = false
+LinearSolve.needs_concrete_A(alg::ResidueWarning) = LinearSolve.needs_concrete_A(alg.alg)
 
 LinearSolve.init_cacheval(alg::ResidueWarning, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump) =
     LinearSolve.init_cacheval(alg.alg, A, b, u, Pl, Pr, maxiters, abstol, reltol, verbose, assump)
