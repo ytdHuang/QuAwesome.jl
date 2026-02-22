@@ -124,12 +124,12 @@ cuDSSLUFactorization(
     kwargs...,
 ) = cuDSSLUFactorization(ϵ, refine, reuse_symbolic, refact_lim, NamedTuple(kwargs))
 
-struct cuDSSLUCache{S,TA}
+struct cuDSSLUCache{S, TA}
     solver::S
-    nnz::Union{Int64,Int32}
-    dims::Tuple{Int,Int}
+    nnz::Union{Int64, Int32}
+    dims::Tuple{Int, Int}
     use::Int
-    work::Union{Nothing,TA} # workspace for refinement, if refine=true
+    work::Union{Nothing, TA} # workspace for refinement, if refine=true
 end
 
 function config_solver(solver, alg::cuDSSLUFactorization)
@@ -145,18 +145,18 @@ function config_solver(solver, alg::cuDSSLUFactorization)
 end
 
 function LinearSolve.init_cacheval(
-    alg::cuDSSLUFactorization,
-    A::CuSparseMatrixCSR,
-    b::CuArray,
-    u::CuArray,
-    Pl,
-    Pr,
-    maxiters,
-    abstol,
-    reltol,
-    verbose,
-    assump,
-)
+        alg::cuDSSLUFactorization,
+        A::CuSparseMatrixCSR,
+        b::CuArray,
+        u::CuArray,
+        Pl,
+        Pr,
+        maxiters,
+        abstol,
+        reltol,
+        verbose,
+        assump,
+    )
     A_ = alg.ϵ == 0 ? A : A + alg.ϵ * FillArrays.Eye{eltype(A)}(size(A, 1))
 
     solver = CudssSolver(A_, "G", 'F')
@@ -173,7 +173,7 @@ function LinearSolve.init_cacheval(
     nnz = A_.nnz
     work = alg.refine ? similar(b) : nothing
 
-    state = cuDSSLUCache{typeof(solver),typeof(work)}(
+    state = cuDSSLUCache{typeof(solver), typeof(work)}(
         solver,
         nnz,
         dims,
@@ -220,7 +220,7 @@ function SciMLBase.solve!(cache::LinearSolve.LinearCache, alg::cuDSSLUFactorizat
         end
 
         # Update cache state
-        cache.cacheval = cuDSSLUCache{typeof(solver),typeof(work)}(solver, new_nnz, new_dims, new_use, work)
+        cache.cacheval = cuDSSLUCache{typeof(solver), typeof(work)}(solver, new_nnz, new_dims, new_use, work)
     end
 
     if alg.refine && (alg.ϵ != 0)
@@ -246,7 +246,7 @@ struct ResidueWarning <: LinearSolve.SciMLLinearSolveAlgorithm
     alg::LinearSolve.SciMLLinearSolveAlgorithm
     tol::Real
 
-    ResidueWarning(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real = 1e-14) = new(alg, tol)
+    ResidueWarning(alg::LinearSolve.SciMLLinearSolveAlgorithm, tol::Real = 1.0e-14) = new(alg, tol)
 end
 LinearSolve.needs_concrete_A(alg::ResidueWarning) = LinearSolve.needs_concrete_A(alg.alg)
 

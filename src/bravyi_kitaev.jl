@@ -13,11 +13,11 @@ function U_set(N::Int, j::Int)
 end
 
 function P_set(j::Int)
-    p = j-1         # prefix parity = modes < i
+    p = j - 1         # prefix parity = modes < i
     out = Int[]
     while p >= 0
         push!(out, p)
-        p = (p & (p+1)) - 1    # drop the LSB block
+        p = (p & (p + 1)) - 1    # drop the LSB block
     end
     return out
 end
@@ -33,23 +33,23 @@ function F_set(j::Int)
 end
 
 function bkdestroy(N::Int, j::Int)
-    U = U_set(N, j-1)
-    P = P_set(j-1)
-    F = F_set(j-1)
+    U = U_set(N, j - 1)
+    P = P_set(j - 1)
+    F = F_set(j - 1)
     R = setdiff(P, F)
 
     dims = ntuple(i -> 2, N)
     Id = qeye(2^N, dims = dims)
 
-    XU = isempty(U) ? Id : multisite_operator(dims, map(i -> i+1 => sigmax(), U)...)
-    ZR = isempty(R) ? Id : multisite_operator(dims, map(i -> i+1 => sigmaz(), R)...)
-    ZP = isempty(P) ? Id : multisite_operator(dims, map(i -> i+1 => sigmaz(), P)...)
+    XU = isempty(U) ? Id : multisite_operator(dims, map(i -> i + 1 => sigmax(), U)...)
+    ZR = isempty(R) ? Id : multisite_operator(dims, map(i -> i + 1 => sigmaz(), R)...)
+    ZP = isempty(P) ? Id : multisite_operator(dims, map(i -> i + 1 => sigmaz(), P)...)
 
     Xj = multisite_operator(dims, j => sigmax())
     Yj = multisite_operator(dims, j => sigmay())
 
     # convention that sigmap is the fdestroy
-    return 1/2 * XU * (Xj * ZP + 1im * Yj * ZR)
+    return 1 / 2 * XU * (Xj * ZP + 1im * Yj * ZR)
 end
 
 #################################################
