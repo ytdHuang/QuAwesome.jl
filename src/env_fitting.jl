@@ -17,13 +17,13 @@ function _nrmse(predict::AbstractVector{<:Real}, actual::AbstractVector{<:Real})
 end
 
 function iterated_fit(
-    model::AbstractVector{<:Real},
-    xdata::AbstractVector{<:Real};
-    target_rmse::Real = 2e-5,
-    Nmin::Int = 1,
-    Nmax::Int = 10,
-    m::Int = 1,
-)
+        model::AbstractVector{<:Real},
+        xdata::AbstractVector{<:Real};
+        target_rmse::Real = 2.0e-5,
+        Nmin::Int = 1,
+        Nmax::Int = 10,
+        m::Int = 1,
+    )
     ftype = _float_type(model)
     Model = convert(Vector{ftype}, model)
     Xdata = convert(Vector{ftype}, xdata)
@@ -33,7 +33,7 @@ function iterated_fit(
     nrmse, sol = Inf, nothing
     prob = CurveFitProblem(Xdata, Model)
 
-    while (N<=Nmax) && (nrmse > target_rmse)
+    while (N <= Nmax) && (nrmse > target_rmse)
         sol = solve(prob, ExpSumFitAlgorithm(; n = N, m = m, withconst = false))
         predict = sol(Xdata)
         nrmse = _nrmse(predict, Model)
@@ -72,53 +72,53 @@ Constructing bosonic bath by curve fitting the two-time correlation function dat
 - `combine::Bool`: Whether to combine the real and imaginary parts into a single bath representation. Default to `true`.
 """
 function Boson_Environment_CurveFit(
-    op::QuantumObject,
-    cf_data::AbstractVector{<:Number},
-    tlist::AbstractVector{<:Real};
-    target_rmse::Real = 2e-5,
-    Nr_min::Int = 1,
-    Ni_min::Int = 1,
-    Nr_max::Int = 10,
-    Ni_max::Int = 10,
-    m::Int = 1,
-    combine::Bool = true,
-)
+        op::QuantumObject,
+        cf_data::AbstractVector{<:Number},
+        tlist::AbstractVector{<:Real};
+        target_rmse::Real = 2.0e-5,
+        Nr_min::Int = 1,
+        Ni_min::Int = 1,
+        Nr_max::Int = 10,
+        Ni_max::Int = 10,
+        m::Int = 1,
+        combine::Bool = true,
+    )
     nrmse_real, sol_real =
         iterated_fit(real(cf_data), tlist; target_rmse = target_rmse, Nmin = Nr_min, Nmax = Nr_max, m = m)
     nrmse_imag, sol_imag =
         iterated_fit(imag(cf_data), tlist; target_rmse = target_rmse, Nmin = Ni_min, Nmax = Ni_max, m = m)
 
     return BosonBath(
-        _check_bosonic_coupling_operator(op),
-        sol_real.u.p,
-        -sol_real.u.λ,
-        sol_imag.u.p,
-        -sol_imag.u.λ,
-        combine = combine,
-    ),
-    (nrmse_real = nrmse_real, nrmse_imag = nrmse_imag, sol_real = sol_real, sol_imag = sol_imag)
+            _check_bosonic_coupling_operator(op),
+            sol_real.u.p,
+            -sol_real.u.λ,
+            sol_imag.u.p,
+            -sol_imag.u.λ,
+            combine = combine,
+        ),
+        (nrmse_real = nrmse_real, nrmse_imag = nrmse_imag, sol_real = sol_real, sol_imag = sol_imag)
 end
 
 expsum(η, γ, tlist) = begin
     c(t) =
         sum(zip(η, γ)) do (e, g)
-            return e * exp(-g * t)
-        end
+        return e * exp(-g * t)
+    end
     c.(tlist)
 end
 
 function _auto_Fermion_Lorentz_Pade(
-    op::QuantumObject,
-    λ::T,
-    μ::U,
-    W::V,
-    kT::S;
-    Nmin::Int = 1,
-    Nmax::Int = 100,
-    Nref::Int = 500,
-    tlist::AbstractVector{<:Real} = 0:0.01:20,
-    target_nrmse::Union{<:Real} = 1e-5,
-) where {T<:Real,U<:Real,V<:Real,S<:Real}
+        op::QuantumObject,
+        λ::T,
+        μ::U,
+        W::V,
+        kT::S;
+        Nmin::Int = 1,
+        Nmax::Int = 100,
+        Nref::Int = 500,
+        tlist::AbstractVector{<:Real} = 0:0.01:20,
+        target_nrmse::Union{<:Real} = 1.0e-5,
+    ) where {T <: Real, U <: Real, V <: Real, S <: Real}
     ηp, γp = _fermion_lorentz_pade_param(1, λ, μ, W, kT, Nref)
     ηm, γm = _fermion_lorentz_pade_param(-1, λ, μ, W, kT, Nref)
     cpref = expsum(ηp, γp, tlist)
@@ -162,7 +162,7 @@ auto_Fermion_Lorentz_Pade(
     kT::S,
     info::Val{true};
     kwargs...,
-) where {T<:Real,U<:Real,V<:Real,S<:Real} = _auto_Fermion_Lorentz_Pade(op, λ, μ, W, kT; kwargs...)
+) where {T <: Real, U <: Real, V <: Real, S <: Real} = _auto_Fermion_Lorentz_Pade(op, λ, μ, W, kT; kwargs...)
 
 auto_Fermion_Lorentz_Pade(
     op::QuantumObject,
@@ -172,7 +172,7 @@ auto_Fermion_Lorentz_Pade(
     kT::S,
     info::Val{false};
     kwargs...,
-) where {T<:Real,U<:Real,V<:Real,S<:Real} = _auto_Fermion_Lorentz_Pade(op, λ, μ, W, kT; kwargs...)[1]
+) where {T <: Real, U <: Real, V <: Real, S <: Real} = _auto_Fermion_Lorentz_Pade(op, λ, μ, W, kT; kwargs...)[1]
 
 @doc raw"""
     auto_Fermion_Lorentz_Pade(
@@ -197,20 +197,20 @@ auto_Fermion_Lorentz_Pade(
     kT::S,
     info::Bool = false;
     kwargs...,
-) where {T<:Real,U<:Real,V<:Real,S<:Real} = auto_Fermion_Lorentz_Pade(op, λ, μ, W, kT, Val(info); kwargs...)
+) where {T <: Real, U <: Real, V <: Real, S <: Real} = auto_Fermion_Lorentz_Pade(op, λ, μ, W, kT, Val(info); kwargs...)
 
 function _auto_Fermion_Lorentz_Matsubara(
-    op::QuantumObject,
-    λ::T,
-    μ::U,
-    W::V,
-    kT::S;
-    Nmin::Int = 1,
-    Nmax::Int = 100,
-    Nref::Int = 500,
-    tlist::AbstractVector{<:Real} = 0:0.01:20,
-    target_nrmse::Union{<:Real} = 1e-5,
-) where {T<:Real,U<:Real,V<:Real,S<:Real}
+        op::QuantumObject,
+        λ::T,
+        μ::U,
+        W::V,
+        kT::S;
+        Nmin::Int = 1,
+        Nmax::Int = 100,
+        Nref::Int = 500,
+        tlist::AbstractVector{<:Real} = 0:0.01:20,
+        target_nrmse::Union{<:Real} = 1.0e-5,
+    ) where {T <: Real, U <: Real, V <: Real, S <: Real}
     ηp, γp = _fermion_lorentz_matsubara_param(1, λ, μ, W, kT, Nref)
     ηm, γm = _fermion_lorentz_matsubara_param(-1, λ, μ, W, kT, Nref)
     cpref = expsum(ηp, γp, tlist)
@@ -254,7 +254,7 @@ auto_Fermion_Lorentz_Matsubara(
     kT::S,
     info::Val{true};
     kwargs...,
-) where {T<:Real,U<:Real,V<:Real,S<:Real} = _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)
+) where {T <: Real, U <: Real, V <: Real, S <: Real} = _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)
 
 auto_Fermion_Lorentz_Matsubara(
     op::QuantumObject,
@@ -264,7 +264,7 @@ auto_Fermion_Lorentz_Matsubara(
     kT::S,
     info::Val{false};
     kwargs...,
-) where {T<:Real,U<:Real,V<:Real,S<:Real} = _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)[1]
+) where {T <: Real, U <: Real, V <: Real, S <: Real} = _auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT; kwargs...)[1]
 
 @doc raw"""
     auto_Fermion_Lorentz_Matsubara(
@@ -291,4 +291,4 @@ auto_Fermion_Lorentz_Matsubara(
     kT::S,
     info::Bool = false;
     kwargs...,
-) where {T<:Real,U<:Real,V<:Real,S<:Real} = auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT, Val(info); kwargs...)
+) where {T <: Real, U <: Real, V <: Real, S <: Real} = auto_Fermion_Lorentz_Matsubara(op, λ, μ, W, kT, Val(info); kwargs...)

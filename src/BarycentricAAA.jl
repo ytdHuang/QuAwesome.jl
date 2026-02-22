@@ -65,14 +65,14 @@ C(t_1, t_2)=\frac{1}{4\pi}\int_{-\infty}^{\infty} d\omega \tilde{J}(\omega)\left
 - `bath::BosonBath` : a bosonic bath object with describes the interaction between system and bosonic bath
 """
 function Boson_BarycentricAAA(
-    op::QuantumObject,
-    sample_pts::AbstractVector,
-    Jlist::AbstractVector,
-    kT::Real;
-    tol::Real = 1e-13,
-    mmax::Int = 100,
-    verbose::Bool = false,
-)
+        op::QuantumObject,
+        sample_pts::AbstractVector,
+        Jlist::AbstractVector,
+        kT::Real;
+        tol::Real = 1.0e-13,
+        mmax::Int = 100,
+        verbose::Bool = false,
+    )
     β = 1 / kT
     Z = Float64[sample_pts;]
     JZ = Float64[Jlist;]
@@ -180,15 +180,15 @@ where ``J(\omega)=2\pi\Sigma_k |g_k|^2 \delta(\omega-\omega_k)`` is the spectral
 - `bath::FermionBath` : a fermionic bath object with describes the interaction between system and fermionic bath
 """
 function Fermion_BarycentricAAA(
-    op::QuantumObject,
-    sample_pts::AbstractVector,
-    Jlist::AbstractVector,
-    μ::Real,
-    kT::Real;
-    tol::Real = 1e-13,
-    mmax::Int = 100,
-    verbose::Bool = false,
-)
+        op::QuantumObject,
+        sample_pts::AbstractVector,
+        Jlist::AbstractVector,
+        μ::Real,
+        kT::Real;
+        tol::Real = 1.0e-13,
+        mmax::Int = 100,
+        verbose::Bool = false,
+    )
     β = 1 / kT
     Z = Float64[sample_pts;]
     JZ = Float64[Jlist;]

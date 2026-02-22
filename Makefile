@@ -3,10 +3,10 @@ JULIA:=julia
 default: help
 
 setup:
-	${JULIA} -e 'import Pkg; Pkg.add(["JuliaFormatter"])'
+	${JULIA} --project=@runic --startup-file=no -e 'using Pkg; Pkg.add("Runic")'
 
 format:
-	${JULIA} -e 'using JuliaFormatter; format(".")'
+	${JULIA} --project=@runic --startup-file=no -e 'using Runic; exit(Runic.main(ARGS))' -- --inplace .
 
 test:
 	${JULIA} --project -e 'using Pkg; Pkg.update(); Pkg.test()'

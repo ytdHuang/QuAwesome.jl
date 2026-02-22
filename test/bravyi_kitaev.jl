@@ -14,7 +14,7 @@
         @test commutator(Ci, Ci', anti = true).data == I
         @test norm(commutator(Ci, Ci, anti = true).data) == 0
 
-        for j in (i+1):N
+        for j in (i + 1):N
             Cj = Cs[j]
             @test norm(commutator(Ci, Cj, anti = true).data) == 0
             @test norm(commutator(Ci, Cj', anti = true).data) == 0
