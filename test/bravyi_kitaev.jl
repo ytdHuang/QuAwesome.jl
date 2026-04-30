@@ -24,12 +24,12 @@
     X = sigmax()
     Y = sigmay()
     Z = sigmaz()
-    I = qeye(2)
+    i = qeye(2)
     d = [
-        0.5 * tensor(X, X, I, X) + 0.5im * tensor(Y, X, I, X),
-        0.5 * tensor(Z, X, I, X) + 0.5im * tensor(I, Y, I, X),
-        0.5 * tensor(I, Z, X, X) + 0.5im * tensor(I, Z, Y, X),
-        0.5 * tensor(I, Z, Z, X) + 0.5im * tensor(I, I, I, Y),
+        0.5 * tensor(X, X, i, X) + 0.5im * tensor(Y, X, i, X),
+        0.5 * tensor(Z, X, i, X) + 0.5im * tensor(i, Y, i, X),
+        0.5 * tensor(i, Z, X, X) + 0.5im * tensor(i, Z, Y, X),
+        0.5 * tensor(i, Z, Z, X) + 0.5im * tensor(i, i, i, Y),
     ]
     @test all([fdestroy(4, i, Val(:BK)) == d[i] for i in 1:4])
 end
