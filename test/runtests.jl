@@ -2,16 +2,16 @@ using Test
 using TestItemRunner
 using Pkg
 
-const GROUP_LIST = String["All", "Core", "Code-Quality"]
+const GROUP_LIST = String["All", "Main", "Code-Quality"]
 
 const GROUP = get(ENV, "GROUP", "All")
 (GROUP in GROUP_LIST) || throw(ArgumentError("Unknown GROUP = $GROUP\nThe allowed groups are: $GROUP_LIST\n"))
 
-# Core tests
-if (GROUP == "All") || (GROUP == "Core")
+# Main tests
+if (GROUP == "All") || (GROUP == "Main")
     using QuAwesome
 
-    println("\nStart running Core tests...\n")
+    println("\nStart running Main tests...\n")
     @run_package_tests verbose = true
 end
 
