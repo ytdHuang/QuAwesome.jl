@@ -1,7 +1,7 @@
 export cuDSSLUFactorization, ResidueWarning
 
 # cuDSSLUFactorization
-using CUDA, CUDA.CUSPARSE, CUDSS
+using CUDACore, cuSPARSE, CUDSS
 
 @doc raw"""
     cuDSSLUFactorization(
