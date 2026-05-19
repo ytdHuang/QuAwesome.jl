@@ -7,5 +7,11 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "Skip ChangeLog"
+
+  - package-ecosystem: "julia"
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
       
