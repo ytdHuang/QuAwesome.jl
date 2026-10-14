@@ -22,8 +22,13 @@ end
 const testdir = dirname(@__FILE__)
 
 if (GROUP == "All") || (GROUP == "Code-Quality")
-    Pkg.activate("code-quality")
-    Pkg.develop(PackageSpec(path = dirname(@__DIR__)))
+    path = joinpath(dirname(@__FILE__), "code-quality")
+    Pkg.activate(path)
+
+    # `cd` into `path` first; otherwise `Pkg.develop` writes an absolute (machine-specific) path to Project.toml
+    cd(path) do
+        Pkg.develop(PackageSpec(path = relpath(dirname(@__DIR__), path))) # must `develop` otherwise the code coverage for libraries (like CUDA) will not be collected
+    end
     Pkg.update()
 
     using QuAwesome
